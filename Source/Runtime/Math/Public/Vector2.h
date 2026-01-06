@@ -7,9 +7,9 @@ struct Vector2
 {
 public:
 	// 생성자 
-	FORCEINLINE constexpr Vector2() = default;
-	FORCEINLINE explicit constexpr Vector2(int InX, int InY) : X((float)InX), Y((float)InY) { }
-	FORCEINLINE explicit constexpr Vector2(float InX, float InY) : X(InX), Y(InY) { }
+	FORCEINLINE constexpr Vector2() = default; //FORCELINE - 컴파일러에서 함수 호출 대신 코드 복사해서 붙여넣어 사용
+	FORCEINLINE explicit constexpr Vector2(int InX, int InY) : X((float)InX), Y((float)InY) { } // explicit - 암묵적 형변환 차단
+	FORCEINLINE explicit constexpr Vector2(float InX, float InY) : X(InX), Y(InY) { }  // constexpr - 컴파일 타임에 초기화 보장
 
 	// 연산자 
 	FORCEINLINE constexpr float operator[](BYTE InIndex) const;
@@ -48,7 +48,7 @@ public:
 	static constexpr BYTE Dimension = 2;
 
 	// 멤버변수
-	union
+	union // 메모리공간 같이 사용하는 데이터타입
 	{
 		struct
 		{

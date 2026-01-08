@@ -56,6 +56,7 @@ void SoftRenderer::LoadScene2D()
 Vector2 currentPosition;
 float currentScale = 10.f;
 float scalePos = 10.f;
+float currentDegree = 0.f;
 
 // 게임 로직을 담당하는 함수
 void SoftRenderer::Update2D(float InDeltaSeconds)
@@ -71,10 +72,13 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	static float scaleSpeed = 20.f;
 	static float duration = 1.5f;
 	static float elapsedTime = 0.f;
+	static float rotateSpeed = 180.f;
 
 	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)).GetNormalize();
 	Vector2 deltaPosition = inputVector * moveSpeed * InDeltaSeconds;
 	float deltaScale = input.GetAxis(InputAxis::ZAxis) * scaleSpeed * InDeltaSeconds;
+	float deltaDegree = input.GetAxis(InputAxis::WAxis) * rotateSpeed * InDeltaSeconds;
+
 	elapsedTime += InDeltaSeconds;
 	elapsedTime = Math::FMod(elapsedTime, duration);
 	float currentRad = (elapsedTime / duration) * Math::TwoPI;
@@ -82,6 +86,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	currentPosition += deltaPosition;
 	scalePos = Math::Clamp(scalePos + deltaScale, scaleMin, scaleMax);
 	currentScale = Math::Lerp(scalePos-2.5f, scalePos+2.5f, alpha);
+	currentDegree += deltaDegree;
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -118,17 +123,24 @@ void SoftRenderer::Render2D()
 			hearts.push_back(Vector2(x, y));
 		}
 	}
+	float sin = 0.f, cos = 0.f;
+	Math::GetSinCos(sin, cos, currentDegree);
 
 	rad = 0.f;
 	for (auto const& v : hearts)
 	{
+		Vector2 scaledV = v * currentScale;
+		Vector2 rotatedV = Vector2(scaledV.X * cos - scaledV.Y * sin, scaledV.X * sin + scaledV.Y * cos);
+		Vector2 TranslatedV = rotatedV + currentPosition;
+
 		hsv.H = rad / Math::TwoPI;
-		r.DrawPoint(currentPosition + v * currentScale, hsv.ToLinearColor());
+		r.DrawPoint(TranslatedV, hsv.ToLinearColor());
 		rad += increment;
 	}
 
 	r.PushStatisticText(std::string("Position : ") + currentPosition.ToString());
 	r.PushStatisticText(std::string("Scale : ") + std::to_string(currentScale));
+	r.PushStatisticText(std::string("Degree : " ) + std::to_string(currentDegree));
 }
 
 // 메시를 그리는 함수

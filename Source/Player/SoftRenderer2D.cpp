@@ -53,7 +53,9 @@ void SoftRenderer::LoadScene2D()
 }
 
 // 게임 로직과 렌더링 로직이 공유하는 변수
-
+Vector2 currentPosition;
+float currentScale = 10.f;
+float scalePos = 10.f;
 
 // 게임 로직을 담당하는 함수
 void SoftRenderer::Update2D(float InDeltaSeconds)
@@ -63,7 +65,23 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	const InputManager& input = g.GetInputManager();
 
 	// 게임 로직의 로컬 변수
+	static float moveSpeed = 100.f;
+	static float scaleMin = 5.f;
+	static float  scaleMax = 20.f;
+	static float scaleSpeed = 20.f;
+	static float duration = 1.5f;
+	static float elapsedTime = 0.f;
 
+	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)).GetNormalize();
+	Vector2 deltaPosition = inputVector * moveSpeed * InDeltaSeconds;
+	float deltaScale = input.GetAxis(InputAxis::ZAxis) * scaleSpeed * InDeltaSeconds;
+	elapsedTime += InDeltaSeconds;
+	elapsedTime = Math::FMod(elapsedTime, duration);
+	float currentRad = (elapsedTime / duration) * Math::TwoPI;
+	float alpha = (sinf(currentRad) + 1) * 0.5f;
+	currentPosition += deltaPosition;
+	scalePos = Math::Clamp(scalePos + deltaScale, scaleMin, scaleMax);
+	currentScale = Math::Lerp(scalePos-2.5f, scalePos+2.5f, alpha);
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -80,6 +98,7 @@ void SoftRenderer::Render2D()
 	float rad = 0.f;
 	static float increment = 0.001f;
 	static std::vector<Vector2> hearts;
+	HSVColor hsv(0.f, 1.f, 0.85f);
 
 	// 하트를 구성하는 점 생성
 	if (hearts.empty())
@@ -89,13 +108,27 @@ void SoftRenderer::Render2D()
 			// 하트 방정식
 			// x와 y를 구하기.
 			// hearts.push_back(Vector2(x, y));
+			float sin = sinf(rad);
+			float cos = cosf(rad);
+			float cos2 = cosf(2 * rad);
+			float cos3 = cosf(3 * rad);
+			float cos4 = cosf(4 * rad);
+			float x = 16.f * sin * sin * sin;
+			float y = 13 * cos - 5 * cos2 - 2 * cos3 - cos4;
+			hearts.push_back(Vector2(x, y));
 		}
 	}
 
+	rad = 0.f;
 	for (auto const& v : hearts)
 	{
-		r.DrawPoint(v * 10.f, LinearColor::Blue);
+		hsv.H = rad / Math::TwoPI;
+		r.DrawPoint(currentPosition + v * currentScale, hsv.ToLinearColor());
+		rad += increment;
 	}
+
+	r.PushStatisticText(std::string("Position : ") + currentPosition.ToString());
+	r.PushStatisticText(std::string("Scale : ") + std::to_string(currentScale));
 }
 
 // 메시를 그리는 함수

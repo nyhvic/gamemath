@@ -55,6 +55,7 @@ void SoftRenderer::LoadScene2D()
 // 게임 로직과 렌더링 로직이 공유하는 변수
 float currentDegree = 0.f;
 
+
 // 게임 로직을 담당하는 함수
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
@@ -64,9 +65,12 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 	// 게임 로직의 로컬 변수
 	static float rotateSpeed = 180.f;
-
-	float deltaDegree = input.GetAxis(InputAxis::WAxis) * rotateSpeed * InDeltaSeconds;
-
+	static float rotateDir = 1.f;
+	//float deltaDegree = input.GetAxis(InputAxis::WAxis) * rotateSpeed * InDeltaSeconds;
+	if (input.GetAxis(InputAxis::WAxis)) {
+		rotateDir = input.GetAxis(InputAxis::WAxis) > 0 ? 1.f : -1.f;;
+	}
+	float deltaDegree = rotateDir * rotateSpeed * InDeltaSeconds;
 	// 물체의 최종 상태 설정
 	currentDegree += deltaDegree;
 }
@@ -96,12 +100,24 @@ void SoftRenderer::Render2D()
 			}
 		}
 	}
+	static float maxLength = Vector2(_ScreenSize.X, _ScreenSize.Y).Size() * 0.5f;
 
 	// 사각형 그리기
 	HSVColor hsv(0.f, 1.f, 0.85f);
 	for (auto const& v : squares)
 	{
-		r.DrawPoint(v, hsv.ToLinearColor());
+		Vector2 polarV = v.ToPolarCoordinate();
+
+		if (polarV.Y < 0.f) { polarV.Y += Math::TwoPI; }
+		hsv.H = polarV.Y / Math::TwoPI;
+
+		float ratio = polarV.X / maxLength;
+		float weight = Math::Lerp(1.f, 5.f, ratio);
+
+		polarV.Y += Math::Deg2Rad(currentDegree) * weight;
+
+		Vector2 cartesianV = polarV.ToCartesianCoordinate();
+		r.DrawPoint(cartesianV, hsv.ToLinearColor());
 	}
 
 	// 현재 각도를 화면에 출력

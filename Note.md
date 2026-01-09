@@ -26,3 +26,20 @@ Scale, Rotate, Translation 순으로 적용후 렌더링(World Coordinate 기준
 
 ## 4-5
 polar coordinate에서 각도 변환 후 cartesian coordinate로 변환해서 렌더링, 기능 변형해서 구현  
+
+# 5
+행렬  
+공간변환 행렬곱 고속처리  
+선형성 - addictivity + homogeneity  
+선형변환, 결합법칙 성립 이용  
+공간(기저)변환  
+Scale, Rotate, Sheer  
+Identity, Inverse, Determinent  
+행렬식 0 - 차원 축소됨, 음수 - 기저 평면 뒤집힘  
+역행렬 - 역변환  
+
+## 5-1
+T R S  
+
+## 5-2
+역변환 순서 반대로  

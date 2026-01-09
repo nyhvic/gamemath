@@ -114,14 +114,45 @@ void SoftRenderer::Render2D()
 		}
 	}
 
+	Vector2 sBasis1(currentScale, 0.f);
+	Vector2 sBasis2(0.f, currentScale);
+	Matrix2x2 sMatrix(sBasis1, sBasis2);
+
+	float sin, cos;
+	Math::GetSinCos(sin, cos, currentDegree);
+	Vector2 rBasis1(cos, sin);
+	Vector2 rBasis2(-sin, cos);
+	Matrix2x2 rMatrix(rBasis1, rBasis2);
+
+	Vector2 shBasis1 = Vector2::UnitX;
+	Vector2 shBasis2(currentShear, 1.f);
+	Matrix2x2 shMatrix(shBasis1, shBasis2);
+
+	Matrix2x2 cMatrix = shMatrix * rMatrix * sMatrix;
+
+	float invScale = 1.f / currentScale;
+	Vector2 isBasis1(invScale, 0.f);
+	Vector2 isBasis2(0.f, invScale);
+	Matrix2x2 isMatrix(isBasis1, isBasis2);
+
+	Matrix2x2 irmatrix = rMatrix.Transpose();
+
+	Vector2 ishBasis1 = Vector2::UnitX;
+	Vector2 ishBasis2(-currentShear, 1.f);
+	Matrix2x2 ishMatrix(ishBasis1, ishBasis2);
+
+	Matrix2x2 icMatrix = isMatrix * irmatrix * ishMatrix;
+
 	rad = 0.f;
 	for (auto const& v : hearts)
 	{
 		// 왼쪽 하트
-		r.DrawPoint(v - pivot, hsv.ToLinearColor());
+		Vector2 left = cMatrix * v;
+		r.DrawPoint(left - pivot, hsv.ToLinearColor());
 
 		// 오른쪽 하트
-		r.DrawPoint(v + pivot, hsv.ToLinearColor());
+		Vector2 right = icMatrix * left;
+		r.DrawPoint(right + pivot, hsv.ToLinearColor());
 
 		hsv.H = rad / Math::TwoPI;
 		rad += increment;

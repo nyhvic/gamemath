@@ -114,12 +114,34 @@ void SoftRenderer::Render2D()
 		}
 	}
 
+	Vector3 sBasis1(currentScale, 0.f, 0.f);
+	Vector3 sBasis2(0.f, currentScale, 0.f);
+	Vector3 sBasis3 = Vector3::UnitZ;
+	Matrix3x3 sMatrix(sBasis1, sBasis2, sBasis3);
+
+	float sin, cos;
+	Math::GetSinCos(sin, cos, currentDegree);
+	Vector3 rBasis1(cos, sin, 0);
+	Vector3 rBasis2(-sin, cos, 0);
+	Vector3 rBasis3 = Vector3::UnitZ;
+	Matrix3x3 rMatrix(rBasis1, rBasis2, rBasis3);
+
+	Vector3 tBasis1 = Vector3::UnitX;
+	Vector3 tBasis2 = Vector3::UnitY;
+	Vector3 tBasis3(currentPosition.X, currentPosition.Y, 1);
+	Matrix3x3 tMatrix(tBasis1, tBasis2, tBasis3);
+
+	Matrix3x3 finalMatrix = tMatrix * rMatrix * sMatrix;
+
 	// 각 값을 초기화한 후 동일하게 증가시키면서 색상 값을 지정
 	rad = 0.f;
 	for (auto const& v : hearts)
 	{
+		Vector3 newV(v.X, v.Y, 1.f);
+		Vector3 finalV = finalMatrix * newV;
+
 		hsv.H = rad / Math::TwoPI;
-		r.DrawPoint(v, hsv.ToLinearColor());
+		r.DrawPoint(finalV.ToVector2(), hsv.ToLinearColor());
 		rad += increment;
 	}
 

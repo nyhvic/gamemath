@@ -43,3 +43,15 @@ T R S
 
 ## 5-2
 역변환 순서 반대로  
+
+# 6
+affine space - sheer transfom 이용해 차원 하나 확장하며 translation 행렬로 계산. 마지막 차원 값 1인 공간  
+affine transform  
+point(z=1), displacement vector(z=0) (z - 마지막 차원)  
+affine combination - affine space point를 결합해 새로운 point 생성 - aP1+bP2 (a+b=1)  
+a,b값 범위 설정으로 직선(Line), 반직선(Ray), 선분, 평면 등등 표현 가능  
+screen coordinate - 이산적 좌표 사용, +y방향 밑  
+Rasterization - 벡터좌표 screen coordinate로 변환 후 픽셀에 대응, 색 부여하는 과정  
+
+## 6-1
+변환 후 다시 원래 차원으로  

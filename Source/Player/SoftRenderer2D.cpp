@@ -79,6 +79,13 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 	// [0,1]을 활용해 주기적으로 크기를 반복하기
 	currentDegree = Math::Lerp(0.f, 360.f, alpha);
+
+	float sin, cos;
+	Math::GetSinCosRad(sin, cos, currentRad);
+	lightPosition = Vector2(cos, sin) * lightDistance;
+
+	lightHSVColor.H = currentRad * Math::InvPI * 0.5f;
+	lightColor = lightHSVColor.ToLinearColor();
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -142,7 +149,10 @@ void SoftRenderer::Render2D()
 	// 광원을 받는 구체의 모든 픽셀에 NdotL을 계산해 음영을 산출하고 이를 최종 색상에 반영
 	for (auto const& v : circle)
 	{
-		r.DrawPoint(v, LinearColor::Black);
+		Vector2 n = (v - circlePosition).GetNormalize();
+		Vector2 l = (lightPosition - v).GetNormalize();
+		float shading = Math::Clamp(n.Dot(l), 0.f, 1.f);
+		r.DrawPoint(v, lightColor*shading);
 	}
 
 	// 현재 조명의 위치를 화면에 출력

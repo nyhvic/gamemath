@@ -70,6 +70,22 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	static float currentDegree = 0.f;
 	static float rotateSpeed = 180.f;
 	static float distance = 250.f;
+
+	static std::random_device rd;
+	static std::mt19937 mt(rd());
+	static std::uniform_real_distribution<float> randomY(-200.f, 200.f);
+
+	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
+	if (elapsedTime == duration) {
+		lineStart = Vector2(-400.f, randomY(mt));
+		lineEnd = Vector2(400.f, randomY(mt));
+		elapsedTime = 0.f;
+	}
+
+	currentDegree = Math::FMod(currentDegree + rotateSpeed * InDeltaSeconds, 360.f);
+	float sin, cos;
+	Math::GetSinCos(sin, cos, currentDegree);
+	point = Vector2(cos, sin) * distance;
 }
 
 // 렌더링 로직을 담당하는 함수
@@ -109,6 +125,22 @@ void SoftRenderer::Render2D()
 	// 투영할 라인 그리기
 	r.DrawLine(lineStart, lineEnd, LinearColor::Black);
 	r.DrawLine(lineStart, point, LinearColor::Red);
+
+	Vector2 unitV = (lineEnd - lineStart).GetNormalize();
+	Vector2 u = point - lineStart;
+	Vector2 projV = unitV * (u.Dot(unitV));
+	Vector2 projectedPoint = lineStart + projV;
+	float distance = (projectedPoint - point).Size();
+
+	for (auto const& v : circle) {
+		r.DrawPoint(v + projectedPoint, LinearColor::Magenta);
+	}
+
+	r.DrawLine(projectedPoint, point, LinearColor::Gray);
+
+	r.PushStatisticText(std::string("Point : ") + point.ToString());
+	r.PushStatisticText(std::string("Projected Point : ") + projectedPoint.ToString());
+	r.PushStatisticText(std::string("Distance : ") + std::to_string(distance));
 }
 
 // 메시를 그리는 함수

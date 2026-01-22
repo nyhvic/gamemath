@@ -256,3 +256,25 @@ t = (wdotu * udotv - wdotv * udotu) * invDenominator
 ## 8-4
 정점에 UV좌표 할당, 각 픽셀 무게중심좌표로 정점 UV좌표와 선형보간해 픽셀의 UV값 계산후 텍스쳐 색상 할당  
 
+# 9
+Scene(level) - object(actor) 묶어서 관리, object는 transform가짐   
+private 멤버에 주로 m_~~ or _~~로 명명  
+rigid transform - M(Modeling matrix) = T*R*S 사용  
+local space - object 정보를 담는 공간  
+local axis - object 기준 방향 정보, local space 기저와 같음, transform에 포함, x(right), y(up), z(forward)  
+world space - object를 모아 담는 공간  
+object local space 정보에 modeling matrix 적용해 world space로 변환  
+Resource repository - 리소스 보관, 리소스 유형별로 나눔, 리소스는 키와 데이터 가짐, object는 리소스의 키만 저장  
+Workflow - 게임엔진 실행 흐름, 씬 완성, 씬으로 렌더링 ex) 리소스 로딩, 씬 구축, 게임 로직(Update), 렌더링 로직(Render)  
+문자열 해싱 이용해서 해시값으로 에셋 ID 관리  
+rendering pipeline - GPU내부에 설정, object 정보 GPU에 넘겨 렌더링, ex) 정점 변환, 정점 처리, 픽셀화, 픽셀 처리  
+drawcall - 렌더링 파이프라인을 시작하는 함수 호출  
+shader - 개발자가 설계한 로직으로 렌더링, vertex shader, fragment shader  
+fragment - 삼각형 구성 픽셀  
+viewport - 카메라가 출력할 화면 크기 정보  
+view space - 카메라 기준으로 변환한 공간  
+view matrix - world 좌표를 카메라 중심 좌표로 변환하는 행렬  
+v(view) = V*M*v(local)  
+
+## 9-1
+v(view) = V*M*v(local) 이용, Lagging 효과    

@@ -69,6 +69,15 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	static float moveSpeed = 500.f;
 	static float rotateSpeed = 180.f;
 
+	GameObject& goPlayer = g.GetGameObject(PlayerGo);
+	CameraObject& camera = g.GetMainCamera();
+	TransformComponent& playerTransform = goPlayer.GetTransform();
+
+	Vector3 inputVector = Vector3(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis), input.GetAxis(InputAxis::ZAxis)).GetNormalize();
+	playerTransform.AddPosition(inputVector * moveSpeed * InDeltaSeconds);
+	playerTransform.AddPitchRotation(-input.GetAxis(InputAxis::WAxis) * rotateSpeed * InDeltaSeconds);
+
+	camera.SetLookAtRotation(playerTransform.GetPosition());
 }
 
 // 애니메이션 로직을 담당하는 함수

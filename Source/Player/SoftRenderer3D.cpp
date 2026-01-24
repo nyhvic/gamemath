@@ -57,6 +57,7 @@ void SoftRenderer::LoadScene3D()
 }
 
 // 실습 설정을 위한 변수
+bool useBackfaceCulling = false;
 
 
 // 게임 로직을 담당하는 함수
@@ -82,6 +83,10 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 
 	// 입력에 따른 카메라 트랜스폼의 변경
 	camera.SetLookAtRotation(playerTransform.GetPosition());
+
+	if (input.IsReleased(InputButton::Space)) {
+		useBackfaceCulling = !useBackfaceCulling;
+	}
 }
 
 // 애니메이션 로직을 담당하는 함수
@@ -184,6 +189,16 @@ void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const Linea
 {
 	auto& r = GetRenderer();
 	const GameEngine& g = Get3DGameEngine();
+
+	if (useBackfaceCulling) {
+		Vector3 edge1 = (InVertices[1].Position - InVertices[0].Position).ToVector3();
+		Vector3 edge2 = (InVertices[2].Position - InVertices[0].Position).ToVector3();
+		Vector3 faceNormal = edge1.Cross(edge2);
+		Vector3 viewDirection = -Vector3::UnitZ;
+		if (faceNormal.Dot(viewDirection) >= 0.f) {
+			return;
+		}
+	}
 
 	LinearColor finalColor = _WireframeColor;
 	if (InColor != LinearColor::Error)

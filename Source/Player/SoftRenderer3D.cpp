@@ -131,7 +131,15 @@ void SoftRenderer::Render3D()
 		if (gameObject == PlayerGo)
 		{
 			// 플레이어 관련 정보
+			Vector4 clippedPos = pvMatrix * Vector4(transform.GetPosition());
+			float cameraDepth = clippedPos.W;
+			if (cameraDepth == 0) { cameraDepth == SMALL_NUMBER; }
+			float ndcZ = clippedPos.Z / cameraDepth;
+
 			r.PushStatisticText("Player: " + transform.GetPosition().ToString());
+			r.PushStatisticText("Depth: " + std::to_string(ndcZ));
+			r.PushStatisticText("Distance: " + std::to_string(clippedPos.W));
+			
 		}
 	}
 
@@ -195,10 +203,10 @@ void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const Linea
 		// 무한 원점인 경우, 약간 보정해준다.
 		if (v.Position.Z == 0.f) v.Position.Z = SMALL_NUMBER;
 
-		float invZ = 1.f / v.Position.Z;
-		v.Position.X *= invZ;
-		v.Position.Y *= invZ;
-		v.Position.Z *= invZ;
+		float invW = 1.f / v.Position.W;
+		v.Position.X *= invW;
+		v.Position.Y *= invW;
+		v.Position.Z *= invW;
 	}
 
 	// 백페이스 컬링

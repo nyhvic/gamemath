@@ -202,10 +202,10 @@ void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const Linea
 		// 무한 원점인 경우, 약간 보정해준다.
 		if (v.Position.Z == 0.f) v.Position.Z = SMALL_NUMBER;
 
-		float invZ = 1.f / v.Position.Z;
-		v.Position.X *= invZ;
-		v.Position.Y *= invZ;
-		v.Position.Z *= invZ;
+		float invW = 1.f / v.Position.W;
+		v.Position.X *= invW;
+		v.Position.Y *= invW;
+		v.Position.Z *= invW;
 	}
 
 	// 백페이스 컬링
@@ -273,6 +273,10 @@ void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const Linea
 		upperRightPoint.X = Math::Min(_ScreenSize.X, upperRightPoint.X);
 		upperRightPoint.Y = Math::Max(0, upperRightPoint.Y);
 
+		float invZ0 = 1.f / InVertices[0].Position.W;
+		float invZ1 = 1.f / InVertices[1].Position.W;
+		float invZ2 = 1.f / InVertices[2].Position.W;
+
 		// 삼각형 영역 내 모든 점을 점검하고 색칠
 		for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
 		{
@@ -289,7 +293,10 @@ void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const Linea
 				float oneMinusST = 1.f - s - t;
 				if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 				{
-					Vector2 targetUV = InVertices[0].UV * oneMinusST + InVertices[1].UV * s + InVertices[2].UV * t;
+					float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
+					float invZ = 1.f / z;
+
+					Vector2 targetUV = (InVertices[0].UV * oneMinusST * invZ0 + InVertices[1].UV * s * invZ1 + InVertices[2].UV * t * invZ2) * invZ;
 					r.DrawPoint(fragment, FragmentShader3D(mainTexture.GetSample(targetUV), LinearColor::White));
 				}
 			}

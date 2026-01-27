@@ -215,6 +215,10 @@ void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const Linea
 {
 	auto& r = GetRenderer();
 	const GameEngine& g = Get3DGameEngine();
+	const CameraObject& mainCamera = g.GetMainCamera();
+
+	float n = mainCamera.GetNearZ();
+	float f = mainCamera.GetFarZ();
 
 	// Å¬¸³ ÁÂÇ¥¸¦ NDC ÁÂÇ¥·Î º¯°æ
 	for (auto& v : InVertices)
@@ -336,6 +340,9 @@ void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const Linea
 					if (IsDepthBufferDrawing())
 					{
 						float grayScale = (newDepth + 1.f) * 0.5f;
+						if (useLinearVisualization) {
+							grayScale = (invZ - n) / (f - n);
+						}
 						r.DrawPoint(fragment, LinearColor::White * grayScale);
 					}
 					else

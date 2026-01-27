@@ -315,6 +315,17 @@ void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const Linea
 
 				if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 				{
+					if (toggleDepthTesting) {
+						float newDepth = InVertices[0].Position.Z * oneMinusST + InVertices[1].Position.Z * s + InVertices[2].Position.Z * t;
+						float prevDepth = r.GetDepthBufferValue(fragment);
+						if (newDepth < prevDepth) {
+							r.SetDepthBufferValue(fragment, newDepth);
+						}
+						else {
+							continue;
+						}
+					}
+
 					// 투영보정에 사용할 공통 분모
 					float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
 					float invZ = 1.f / z;

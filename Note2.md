@@ -90,3 +90,48 @@ n평면 작지않게 조정 필요, z-fighting - 깊이값 정밀도 문제로 �
 원근보정매핑 공식 응용해 뷰공간 깊이값 계산  
 z' = 1/q1/z1 + q2/z2 + q3/z3(픽셀의 vz값=뷰공간 z값, 클립 w값), 깊이가 vz값을 이용하니 미리 구한 z`값 재사용하는듯  
 c(depth) = z'-n/f-n, near,far값 으로 나눠 선형화된 [0,1]범위 뷰공간 깊이  
+
+# 13
+절두체 컬링(frustum culling) - 절두체 영역 밖 오브젝트 컬링, 절두체 평면 외부 물체 무시, 뷰공간  
+평면의 방정식 사용, 법선벡터로 위아래 구분, n*(P-P0)=0, ax+by+cz+d=0, d=-n*p, -원점to평면 최단거리, 평면 방향(+원점-반대)  
+임의 점과 평면 법선 내적+d 부호로 임의 점이 평면 내부 외부 판별 +바깥-안, 절대값 최단거리  
+절두체 - near,far 제외 모두 d=0, 법선벡터 부호변경x  
+NDC좌표 (nx,ny,nz) [-1,1]범위면 frustum 내부, 클립 좌표 (x,y,z,w)에서 -w<=x,y,z<=w, 뷰공간 좌표 v=(vx,vy,vz,1)  
+P(원근투영행렬)*v = (x,y,z,w), x=P(row1)*v, y=P(row2)*v, z=P(row3)*v, w=P(row4)*v  
+(Prow4+Prow1)*v>=0, (Prow4-Prow1)*v>=0, (Prow4+Prow2)*v>=0  
+(Prow4-Prow2)*v>=0, (Prow4+Prow3)*v>=0, (Prow4-Prow3)*v>=0  6개 부등식 만족  
+Prown+-Prowk = (a,b,c,d), (a,b,c,d)*v>=0, 평면방정식 -(ax+by+cz+d)/root(a^2+b^2+c^2)>0 컬링  
+카메라 원근투영행렬 이용해 코사인 사인값 쓰지않고 NDC좌표값 반영된 화면 종횡비 고려한 컬링  
+Bounding volum - 원시 도형(primitive shape|sphere, box 등등)으로 설정한 공간 데이터  
+구(sphere) - 중심(메시 중점)과 반지름(중점과 가장 먼 점), 거리와 반지름 비교, 평면과 중심 거리(법선벡터 내적+d), 반지름 비교로 내외부 확인  
+AABB(axis aligned bounding volume) - 메시 구성 점 축별 최대 최소값 두 점  
+평면 법선벡터 축 부호에 해당하는 점 ex) (+,-,+)과(min,max,min) 내적+d로 내외부 판단, 양수 밖, 음수+반대방향 점 결과 양수 교차, 음수+음수 내부   
+
+## 13-1  
+pcos,psin = cos(Θ/2),sin(Θ/2)  
+Plane(Vector3(pCos,0.f,pSin),0.f), // +Y  
+Plane(Vector3(-pCos,0.f,pSin),0.f), // -Y  
+Plane(Vector3(0.f,pCos,pSin),0.f), // +X  
+Plane(Vector3(0.f,-pCos,pSin),0.f), // -X  
+Plane(Vector3(0.f,0.f,1.f),nearZ), // +Z  
+Plane(Vector3(0.f,0.f,-1.f),-farZ, // -Z  
+frustum 평면 계산 후 내부외부 계산해 컬링  
+
+## 13-2
+Plane(-(ptMatrix[3] - ptMatrix[1])), //+Y  
+Plane(-(ptMatrix[3] + ptMatrix[1])), //-Y  
+Plane(-(ptMatrix[3] - ptMatrix[0])), //+X  
+Plane(-(ptMatrix[3] + ptMatrix[0])), //-X  
+Plane(-(ptMatrix[3] - ptMatrix[2])), //+Z  
+Plane(-(ptMatrix[3] + ptMatrix[2])) //-Z  
+사인 코사인 계산없이, 종횡비 반영  
+
+## 13-3
+구 반지름에 스케일 반영, 구 중심 뷰 공간으로 변환  
+
+## 13-4
+원근투영 행렬 P 대신 뷰,모델링 행렬 곱한 PVM을 컬링 검사에 사용에 로컬 좌표로 컬링  
+모델링 행렬 따로구해 바운딩 볼륨 뷰 공간 변환하지 않고 컬링  
+
+## 13-5
+sphere에 비해 정교하고 계산량 높음  

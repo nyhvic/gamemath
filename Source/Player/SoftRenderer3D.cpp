@@ -50,11 +50,11 @@ void SoftRenderer::LoadScene3D()
 
 	// 고정 시드로 랜덤하게 생성
 	std::mt19937 generator(0);
-	std::uniform_real_distribution<float> distZ(-1500.f, 0.f);
+	std::uniform_real_distribution<float> distZ(-1000.f, -100.f);
 	std::uniform_real_distribution<float> distXY(-1000.f, 1000.f);
 
 	// 100개의 큐브 게임 오브젝트 생성
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < 500; ++i)
 	{
 		char name[64];
 		std::snprintf(name, sizeof(name), "GameObject%d", i);
@@ -129,7 +129,29 @@ void SoftRenderer::Render3D()
 	DrawGizmo3D();
 
 	// 렌더링 로직의 로컬 변수
+	const Matrix4x4 vMatrix = mainCamera.GetViewMatrix();
 	const Matrix4x4 pvMatrix = mainCamera.GetPerspectiveViewMatrix();
+
+	float nearZ = mainCamera.GetNearZ();
+	float farZ = mainCamera.GetFarZ();
+	float halfFOV = mainCamera.GetFOV() * 0.5f;
+	float pSin, pCos;
+	Math::GetSinCos(pSin, pCos, halfFOV);
+
+	static std::array<Plane, 6> frustumPlanes = {
+		Plane(Vector3(pCos,0.f,pSin),0.f), // +Y
+		Plane(Vector3(-pCos,0.f,pSin),0.f), // -Y
+		Plane(Vector3(0.f,pCos,pSin),0.f), // +X
+		Plane(Vector3(0.f,-pCos,pSin),0.f), // -X
+		Plane(Vector3(0.f,0.f,1.f),nearZ), // +Z
+		Plane(Vector3(0.f,0.f,-1.f),-farZ) // -Z
+	};
+
+	Frustum frustumInView(frustumPlanes);
+
+	size_t totalObjects = g.GetScene().size();
+	size_t culledObjects = 0;
+	size_t renderedObjects = 0;
 
 	for (auto it = g.SceneBegin(); it != g.SceneEnd(); ++it)
 	{
@@ -143,12 +165,22 @@ void SoftRenderer::Render3D()
 		const Mesh& mesh = g.GetMesh(gameObject.GetMeshKey());
 		const TransformComponent& transform = gameObject.GetTransform();
 
+		Vector4 viewPos = vMatrix * Vector4(transform.GetPosition());
+		if (frustumInView.CheckBound(viewPos.ToVector3()) == BoundCheckResult::Outside) {
+			culledObjects++;
+			continue;
+		}
+
 		// 최종 행렬 계산
 		Matrix4x4 finalMatrix = pvMatrix * transform.GetModelingMatrix();
 
 		// 메시 그리기
 		DrawMesh3D(mesh, finalMatrix, gameObject.GetColor());
+		renderedObjects++;
 	}
+	r.PushStatisticText("Total Objects : " + std::to_string(totalObjects));
+	r.PushStatisticText("Culled Objects : " + std::to_string(culledObjects));
+	r.PushStatisticText("Rendered Objects : " + std::to_string(renderedObjects));
 }
 
 // 메시를 그리는 함수

@@ -199,6 +199,21 @@ void SoftRenderer::DrawMesh3D(const Mesh& InMesh, const Matrix4x4& InMatrix, con
 		int bi0 = ti * 3, bi1 = ti * 3 + 1, bi2 = ti * 3 + 2;
 		std::vector<Vertex3D> tvs = { vertices[indice[bi0]] , vertices[indice[bi1]] , vertices[indice[bi2]] };
 
+		if (useHomogeneousClipping) {
+			std::vector<PerspectiveTest> testPlanes = {
+				{TestFuncW0,EdgeFuncW0},
+				{TestFuncNY,EdgeFuncNY},
+				{TestFuncPY,EdgeFuncPY},
+				{TestFuncNX,EdgeFuncNX},
+				{TestFuncPX,EdgeFuncPX},
+				{TestFuncFar,EdgeFuncFar},
+				{TestFuncNear,EdgeFuncNear}
+			};
+			for (auto& p : testPlanes) {
+				p.ClipTriangles(tvs);
+			}
+		}
+
 		size_t triangles = tvs.size() / 3;
 		for (size_t ti = 0; ti < triangles; ++ti)
 		{
